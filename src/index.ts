@@ -1,12 +1,13 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { readFileSync } from "node:fs";
 import { postRecord, allPosts, PostRecord } from "./schema.js";
 
 // CSV parsing helper function
 function parseCSV(csvText: string): PostRecord[] {
-	const lines = csvText.split('\n');
-	const headers = lines[0].split(',');
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',');
 	
 	return lines.slice(1)
 		.filter((line: string) => line.trim())
@@ -17,7 +18,13 @@ function parseCSV(csvText: string): PostRecord[] {
 				post[header] = values[index] || '';
 			});
 			return post as PostRecord;
-		});
+                });
+}
+
+// CSV file reading helper function
+function readCSVFile(filePath: string): PostRecord[] {
+       const csvText = readFileSync(filePath, "utf8");
+       return parseCSV(csvText);
 }
 
 
