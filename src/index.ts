@@ -1,7 +1,6 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { readFileSync } from "node:fs";
 import { postRecord, allPosts, PostRecord } from "./schema.js";
 
 // CSV parsing helper function
@@ -21,11 +20,6 @@ function parseCSV(csvText: string): PostRecord[] {
                 });
 }
 
-// CSV file reading helper function
-function readCSVFile(filePath: string): PostRecord[] {
-       const csvText = readFileSync(filePath, "utf8");
-       return parseCSV(csvText);
-}
 
 
 
