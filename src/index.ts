@@ -3,7 +3,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { PostRecord } from "./schema.js";
 
-// CSV parsing helper function
 function parseCSV(csvText: string): PostRecord[] {
 	const lines = csvText.split('\n');
 	const headers = lines[0].split(',');
@@ -32,8 +31,9 @@ export class MyMCP extends McpAgent {
 			{
 				startDate: z.string().optional().describe("Start date in YYYY-MM-DD format"),
 				endDate: z.string().optional().describe("End date in YYYY-MM-DD format"),
+				limit: z.number().optional().describe("Maximum number of records to return (default: 50, max: 1000)"),
 			},
-			async ({ startDate, endDate }) => {
+			async ({ startDate, endDate, limit }) => {
 				try {
 					// Access KV storage from environment
 					const kvStore = (this.env as any)?.POSTS_DATA;
@@ -61,15 +61,28 @@ export class MyMCP extends McpAgent {
 						filteredPosts = posts.filter((post: PostRecord) => {
 							if (!post.Date) return false;
 							
-							const postDate = new Date(post.Date);
+							// Extract just the date part from the datetime string (YYYY-MM-DD)
+							const postDateStr = post.Date.split(' ')[0];
+							
+							// Validate date format
+							if (!/^\d{4}-\d{2}-\d{2}$/.test(postDateStr)) {
+								return false;
+							}
+							
+							const postDate = new Date(postDateStr + 'T00:00:00.000Z');
+							
+							// Check if date is valid
+							if (isNaN(postDate.getTime())) {
+								return false;
+							}
 							
 							if (startDate) {
-								const start = new Date(startDate);
+								const start = new Date(startDate + 'T00:00:00.000Z');
 								if (postDate < start) return false;
 							}
 							
 							if (endDate) {
-								const end = new Date(endDate);
+								const end = new Date(endDate + 'T23:59:59.999Z');
 								if (postDate > end) return false;
 							}
 							
@@ -77,9 +90,15 @@ export class MyMCP extends McpAgent {
 						});
 					}
 
-					const resultText = `Found ${filteredPosts.length} posts${startDate || endDate ? ` between ${startDate || 'beginning'} and ${endDate || 'end'}` : ''}.\n\n` +
-						filteredPosts.slice(0, 10).map((post: PostRecord) => 
-							`Date: ${post.Date}\nAuthor: ${post.Name}\nPost: ${post.Post}: ''}\nLikes: ${post.Likes} | Reposts: ${post.Reposts} | Quotes: ${post.Quotes}\nURL: ${post.URL}`
+					// Set the limit with validation
+					const recordLimit = Math.min(Math.max(limit || 10, 1), 100);
+
+					const resultText = `Found ${filteredPosts.length} posts${startDate || endDate ? ` between ${startDate || 'beginning'} and ${endDate || 'end'}` : ''}.\n` +
+						`Showing first ${Math.min(recordLimit, filteredPosts.length)} of ${filteredPosts.length} results.\n\n` +
+						(filteredPosts.length > 0 ? 
+							`Date range in results: ${filteredPosts[0]?.Date?.split(' ')[0]} to ${filteredPosts[filteredPosts.length - 1]?.Date?.split(' ')[0]}\n\n` : '') +
+						filteredPosts.slice(0, recordLimit).map((post: PostRecord) => 
+							`Date: ${post.Date}\nAuthor: ${post.Name}\nPost: ${post.Post}\nLikes: ${post.Likes} | Reposts: ${post.Reposts} | Quotes: ${post.Quotes}\nURL: ${post.URL}`
 						).join('\n\n');
 
 					return {
