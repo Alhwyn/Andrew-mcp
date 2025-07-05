@@ -31,11 +31,10 @@ export class MyMCP extends McpAgent {
 			{
 				startDate: z.string().optional().describe("Start date in YYYY-MM-DD format"),
 				endDate: z.string().optional().describe("End date in YYYY-MM-DD format"),
-				limit: z.number().optional().describe("Maximum number of records to return (default: 50, max: 1000)"),
+				limit: z.number().optional().describe("Maximum number of records to return (default: 50, max: 500)"),
 			},
 			async ({ startDate, endDate, limit }) => {
 				try {
-					// Access KV storage from environment
 					const kvStore = (this.env as any)?.POSTS_DATA;
 					if (!kvStore) {
 						return {
@@ -43,7 +42,6 @@ export class MyMCP extends McpAgent {
 						};
 					}
 
-					// Read CSV data from KV storage
 					const csvData = await kvStore.get("posts_csv");
 					if (!csvData) {
 						return {
@@ -51,10 +49,8 @@ export class MyMCP extends McpAgent {
 						};
 					}
 
-					// Parse the CSV data
 					const posts = parseCSV(csvData);
 
-					// Filter by date range
 					let filteredPosts = posts;
 					
 					if (startDate || endDate) {
@@ -91,7 +87,7 @@ export class MyMCP extends McpAgent {
 					}
 
 					// Set the limit with validation
-					const recordLimit = Math.min(Math.max(limit || 10, 1), 100);
+					const recordLimit = Math.min(Math.max(limit || 10), 500);
 
 					const resultText = `Found ${filteredPosts.length} posts${startDate || endDate ? ` between ${startDate || 'beginning'} and ${endDate || 'end'}` : ''}.\n` +
 						`Showing first ${Math.min(recordLimit, filteredPosts.length)} of ${filteredPosts.length} results.\n\n` +
