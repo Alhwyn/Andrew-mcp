@@ -29,11 +29,11 @@ export class MyMCP extends McpAgent {
 		this.server.tool(
 			"get_tweet_date_range",
 			{
-				startDate: z.string().optional().describe("Start date in YYYY-MM-DD format"),
-				endDate: z.string().optional().describe("End date in YYYY-MM-DD format"),
-				limit: z.number().optional().describe("Maximum number of records to return (default: 50, max: 500)"),
+				startDate: z.string().optional().describe("Start date in YYYY-MM-DD format (optional)"),
+				endDate: z.string().optional().describe("End date in YYYY-MM-DD format (optional)"),
+				limit: z.number().min(1).max(500).optional().default(50).describe("Maximum number of records to return. Default: 50, Range: 1-500"),
 			},
-			async ({ startDate, endDate, limit }) => {
+			async ({ startDate, endDate, limit = 50 }) => {
 				try {
 					const kvStore = (this.env as any)?.POSTS_DATA;
 					if (!kvStore) {
@@ -87,7 +87,7 @@ export class MyMCP extends McpAgent {
 					}
 
 					// Set the limit with validation
-					const recordLimit = Math.min(Math.max(limit || 10), 500);
+					const recordLimit = Math.min(Math.max(limit, 1), 500);
 
 					const resultText = `Found ${filteredPosts.length} posts${startDate || endDate ? ` between ${startDate || 'beginning'} and ${endDate || 'end'}` : ''}.\n` +
 						`Showing first ${Math.min(recordLimit, filteredPosts.length)} of ${filteredPosts.length} results.\n\n` +
