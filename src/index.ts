@@ -1,12 +1,12 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { postRecord, allPosts, PostRecord } from "./schema.js";
+import type { PostRecord } from "./schema.js";
 
 // CSV parsing helper function
 function parseCSV(csvText: string): PostRecord[] {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',');
+	const lines = csvText.split('\n');
+	const headers = lines[0].split(',');
 	
 	return lines.slice(1)
 		.filter((line: string) => line.trim())
@@ -17,12 +17,8 @@ function parseCSV(csvText: string): PostRecord[] {
 				post[header] = values[index] || '';
 			});
 			return post as PostRecord;
-                });
+		});
 }
-
-
-
-
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
 	server = new McpServer({
@@ -31,32 +27,32 @@ export class MyMCP extends McpAgent {
 	});
 
 	async init() {
-		// Simple addition tool
 		this.server.tool(
-			"add",
-			{ a: z.number(), b: z.number() },
-			async ({ a, b }) => ({
-				content: [{ type: "text", text: String(a + b) }],
-			})
-		);
-
-		this.server.tool(
-			"get_post_date_range",
+			"get_tweet_date_range",
 			{
 				startDate: z.string().optional().describe("Start date in YYYY-MM-DD format"),
 				endDate: z.string().optional().describe("End date in YYYY-MM-DD format"),
 			},
 			async ({ startDate, endDate }) => {
 				try {
-					// In a Cloudflare Worker, you'd typically store the CSV in KV storage or D1
-					// For now, we'll demonstrate with sample data that matches your CSV structure
-					const sampleCsvData = `Name,Followers,Id,Date,Type,Post,URL,Languages,Reposts,Likes,Quotes,Year
-@awilkinson,313841,1917680578100617363,2025-04-30 20:40:53,Post,Soon! From one anal retentive nerd who loves systems to another ❤️❤️❤️❤️,https://x.com/awilkinson/status/1917680578100617363,en,0,35,0,2025
-@awilkinson,313841,1917622726417867178,2025-04-30 16:51:00,Post,Most of the things that are making you miserable are derived from luck.,https://x.com/awilkinson/status/1917622726417867178,en,5,42,2,2025
-@awilkinson,313841,1917500000000000000,2025-04-29 14:30:00,Post,Another great post about productivity and systems.,https://x.com/awilkinson/status/1917500000000000000,en,12,78,5,2025`;
+					// Access KV storage from environment
+					const kvStore = (this.env as any)?.POSTS_DATA;
+					if (!kvStore) {
+						return {
+							content: [{ type: "text", text: "KV storage not initialized" }],
+						};
+					}
+
+					// Read CSV data from KV storage
+					const csvData = await kvStore.get("posts_csv");
+					if (!csvData) {
+						return {
+							content: [{ type: "text", text: "No CSV data found in storage" }],
+						};
+					}
 
 					// Parse the CSV data
-					const posts = parseCSV(sampleCsvData);
+					const posts = parseCSV(csvData);
 
 					// Filter by date range
 					let filteredPosts = posts;
@@ -83,7 +79,7 @@ export class MyMCP extends McpAgent {
 
 					const resultText = `Found ${filteredPosts.length} posts${startDate || endDate ? ` between ${startDate || 'beginning'} and ${endDate || 'end'}` : ''}.\n\n` +
 						filteredPosts.slice(0, 10).map((post: PostRecord) => 
-							`Date: ${post.Date}\nAuthor: ${post.Name}\nPost: ${post.Post.substring(0, 150)}${post.Post.length > 150 ? '...' : ''}\nLikes: ${post.Likes} | Reposts: ${post.Reposts} | Quotes: ${post.Quotes}\nURL: ${post.URL}\n${'='.repeat(50)}`
+							`Date: ${post.Date}\nAuthor: ${post.Name}\nPost: ${post.Post}: ''}\nLikes: ${post.Likes} | Reposts: ${post.Reposts} | Quotes: ${post.Quotes}\nURL: ${post.URL}`
 						).join('\n\n');
 
 					return {
@@ -98,42 +94,6 @@ export class MyMCP extends McpAgent {
 			}
 		);
 
-		// Calculator tool with multiple operations
-		this.server.tool(
-			"calculate",
-			{
-				operation: z.enum(["add", "subtract", "multiply", "divide"]),
-				a: z.number(),
-				b: z.number(),
-			},
-			async ({ operation, a, b }) => {
-				let result: number;
-				switch (operation) {
-					case "add":
-						result = a + b;
-						break;
-					case "subtract":
-						result = a - b;
-						break;
-					case "multiply":
-						result = a * b;
-						break;
-					case "divide":
-						if (b === 0)
-							return {
-								content: [
-									{
-										type: "text",
-										text: "Error: Cannot divide by zero",
-									},
-								],
-							};
-						result = a / b;
-						break;
-				}
-				return { content: [{ type: "text", text: String(result) }] };
-			}
-		);
 	}
 }
 

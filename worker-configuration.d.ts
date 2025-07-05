@@ -347,8 +347,7 @@ declare const performance: Performance;
 declare const Cloudflare: Cloudflare;
 declare const origin: string;
 declare const navigator: Navigator;
-interface TestController {
-}
+type TestController = {}
 interface ExecutionContext {
     waitUntil(promise: Promise<any>): void;
     passThroughOnException(): void;
@@ -1997,8 +1996,7 @@ interface TraceItem {
 interface TraceItemAlarmEventInfo {
     readonly scheduledTime: Date;
 }
-interface TraceItemCustomEventInfo {
-}
+type TraceItemCustomEventInfo = {}
 interface TraceItemScheduledEventInfo {
     readonly scheduledTime: number;
     readonly cron: string;
@@ -2510,10 +2508,8 @@ interface GPUBufferBindingLayout {
     hasDynamicOffset?: boolean;
     minBindingSize?: (number | bigint);
 }
-interface GPUBindGroupLayout {
-}
-interface GPUBindGroup {
-}
+type GPUBindGroupLayout = {}
+type GPUBindGroup = {}
 interface GPUBindGroupDescriptor {
     label?: string;
     layout: GPUBindGroupLayout;
@@ -2528,8 +2524,7 @@ interface GPUBufferBinding {
     offset?: (number | bigint);
     size?: (number | bigint);
 }
-interface GPUSampler {
-}
+type GPUSampler = {}
 interface GPUSamplerDescriptor {
     label?: string;
     addressModeU?: string;
@@ -2550,8 +2545,7 @@ interface GPUShaderModuleDescriptor {
     label?: string;
     code: string;
 }
-interface GPUPipelineLayout {
-}
+type GPUPipelineLayout = {}
 interface GPUPipelineLayoutDescriptor {
     label?: string;
     bindGroupLayouts: GPUBindGroupLayout[];
@@ -2593,8 +2587,7 @@ interface GPUComputePassDescriptor {
     label?: string;
     timestampWrites?: GPUComputePassTimestampWrites;
 }
-interface GPUQuerySet {
-}
+type GPUQuerySet = {}
 interface GPUQuerySetDescriptor {
     label?: string;
 }
@@ -2606,8 +2599,7 @@ interface GPUComputePassTimestampWrites {
 interface GPUCommandBufferDescriptor {
     label?: string;
 }
-interface GPUCommandBuffer {
-}
+type GPUCommandBuffer = {}
 interface GPUQueue {
     submit(commandBuffers: GPUCommandBuffer[]): void;
     writeBuffer(buffer: GPUBuffer, bufferOffset: number | bigint, data: ArrayBuffer | ArrayBufferView, dataOffset?: (number | bigint), size?: (number | bigint)): void;
@@ -2720,8 +2712,7 @@ interface GPUTexture {
     get format(): string;
     get usage(): number;
 }
-interface GPUTextureView {
-}
+type GPUTextureView = {}
 interface GPUTextureViewDescriptor {
     label: string;
     format: string;
@@ -2739,8 +2730,7 @@ declare abstract class GPUColorWrite {
     static readonly ALPHA: number;
     static readonly ALL: number;
 }
-interface GPURenderPipeline {
-}
+type GPURenderPipeline = {}
 interface GPURenderPipelineDescriptor {
     label?: string;
     layout: string | GPUPipelineLayout;
@@ -4683,8 +4673,7 @@ declare abstract class D1PreparedStatement {
 // but this will ensure type checking on older versions still passes.
 // TypeScript's interface merging will ensure our empty interface is effectively
 // ignored when `Disposable` is included in the standard lib.
-interface Disposable {
-}
+type Disposable = {}
 /**
  * An email message that can be sent from a Worker.
  */
@@ -5128,8 +5117,7 @@ declare namespace Rpc {
     };
 }
 declare namespace Cloudflare {
-    interface Env {
-    }
+    type Env = {}
 }
 declare module "cloudflare:workers" {
     export type RpcStub<T extends Rpc.Stubable> = Rpc.Stub<T>;
