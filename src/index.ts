@@ -27,7 +27,38 @@ export class MyMCP extends McpAgent {
 
 	async init() {
 		this.server.tool(
-			"get_tweet_date_range",
+			"search_youtube_podcast",
+			{
+				keywords: z.string().describe("Keywords to search for in YouTube transcriptions"),
+				limit: z.number().min(1).max(500).optional().default(50).describe("Maximum number of results to return")
+			},
+			async ({ keywords, limit = 50 }) => {
+				console.log("Searching YouTube transcriptions with keywords:", keywords, "Limit:", limit);
+				return {
+					content: [{ type: "text", text: `Searched YouTube transcriptions for: ${keywords} (Limit: ${limit})` }]
+				};
+			}
+		);
+
+		this.server.tool(
+			"get_youtube_podcast",
+			{
+				keywords: z.string().describe("Keywords to search for in YouTube transcriptions"),
+				limit: z.number().min(1).max(500).optional().default(50).describe("Maximum number of results to return")
+			},
+			async ({ keywords, limit = 50 }) => {
+				console.log("Searching YouTube transcriptions with keywords:", keywords, "Limit:", limit);
+				return {
+					content: [{ type: "text", text: `Searched YouTube transcriptions for: ${keywords} (Limit: ${limit})` }]
+				};
+			}
+		);
+	
+	
+
+
+		this.server.tool(
+			"search_tweet_date_range",
 			{
 				startDate: z.string().optional().describe("Start date in YYYY-MM-DD format (optional)"),
 				endDate: z.string().optional().describe("End date in YYYY-MM-DD format (optional)"),
