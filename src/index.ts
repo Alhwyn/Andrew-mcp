@@ -26,6 +26,7 @@ export class MyMCP extends McpAgent {
 	});
 
 	async init() {
+		
 		this.server.tool(
 			"search_youtube_podcast",
 			{
