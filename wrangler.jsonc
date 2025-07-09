@@ -4,17 +4,13 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "my-mcp-server",
+	"name": "andrew",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-03-10",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	"compatibility_flags": ["nodejs_compat"],
 	"migrations": [
 		{
-			"new_sqlite_classes": [
-				"MyMCP"
-			],
+			"new_sqlite_classes": ["MyMCP"],
 			"tag": "v1"
 		}
 	],
@@ -34,7 +30,11 @@
 			"binding": "POSTS_DATA",
 			"id": "ed7608e8839c463ebee472b645e3c366"
 		}
-	]
+	],
+	"vars": {
+		"AIRTABLE_API_TOKEN": "pat8ztGMXKurPx1P2.f2753578ad0d6133fa677a3553b572d8d41b3bed91dbeae28a6adaca0c5e082d",
+		"AIRTABLE_BASE_ID": "apppMvwe5KeUdHCR3"
+	}
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
