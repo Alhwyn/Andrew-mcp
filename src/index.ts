@@ -121,8 +121,6 @@ export async function getTranscribedPodcast(
 	try {
 		const record = await base('Youtube Link Drop').find(recordId);
 
-
-		// Parse record fields to ensure it has the required properties
 		const result: Transcription = {
 			id: record.id,
 			createdTime: record._rawJson.createdTime,
@@ -141,6 +139,7 @@ export class MyMCP extends McpAgent {
 	server = new McpServer({
 		name: "Andrew MCP",
 		version: "1.0.0",
+		logo: "https://pbs.twimg.com/profile_images/1850577967904395264/CU6rpC8N_400x400.jpg"
 	});
 
 	async init() {
@@ -220,7 +219,7 @@ export class MyMCP extends McpAgent {
 					};
 				}
 			}
-		)
+		);
 
 		this.server.tool(
 			"search_tweets",
