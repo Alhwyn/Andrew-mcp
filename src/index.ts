@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { PostRecord, YoutubeLinkDropRecord } from "./schema.js";
 import { YouTubeDropSchema } from "./schema.js";
 import Airtable from "airtable";
+import { number } from "zod/v4";
 
 // Don't initialize Airtable here - do it in the functions that need it
 
@@ -25,6 +26,7 @@ function parseCSV(csvText: string): PostRecord[] {
 }
 
 export async function listYouTubeDrops(
+	limit: number = 50,
 	env: any,
 ): Promise<YoutubeLinkDropRecord[]> {
 	const AIRTABLE_API_TOKEN = env.AIRTABLE_API_TOKEN;
@@ -40,8 +42,8 @@ export async function listYouTubeDrops(
 
 	const raw = await base("Youtube Link Drop")
 		.select({
-			 maxRecords: 50,
-    		 view: "All Data"
+			maxRecords: limit,
+			view: "All Data"
 		})
 		.all();
 
@@ -59,8 +61,38 @@ export async function listYouTubeDrops(
 			}),
 	);
 
+	const successes = parsed
+		.filter((p: { success: any }) => p.success)
+		.map((p: any) => p.data);
+	const errors = parsed
+		.filter((p: { success: any }) => !p.success)
+		.map((p: any) => p.error);
 
-	return parsed;
+	if (errors.length) {
+		console.error("Validation errors:");
+		errors.forEach((error, index) => {
+			console.error(`Error ${index + 1}:`, JSON.stringify(error, null, 2));
+		});
+
+		// Also log the raw data for the first few failed records to see the structure
+		console.error("Sample raw data from failed records:");
+		raw.slice(0, 3).forEach((rec, index) => {
+			console.error(
+				`Raw record ${index + 1}:`,
+				JSON.stringify(
+					{
+						id: rec.id,
+						createdTime: rec._rawJson?.createdTime,
+						fields: rec.fields,
+					},
+					null,
+					2,
+				),
+			);
+		});
+	}
+
+	return successes;
 }
 
 export class MyMCP extends McpAgent {
@@ -73,9 +105,12 @@ export class MyMCP extends McpAgent {
 		this.server.tool(
 			"list_podcast_summaries",
 			"Lists all podcast summary records from Airtable",
-			async () => {
+			{
+				limit: z.number().min(1).max(500).optional().default(50).describe("Maximum number of records to return. Default: 50, Range: 1-500"),
+			},
+			async ({ limit }) => {
 				try {
-					const drops = await listYouTubeDrops(this.env);
+					const drops = await listYouTubeDrops(limit, this.env);
 					console.log(`Found ${drops.length} valid records:\n`);
 
 					for (const d of drops) {
@@ -115,23 +150,15 @@ export class MyMCP extends McpAgent {
 						};
 					});
 
-					const formattedText = `Found ${drops.length} podcast summaries:\n\n` +
-						podcastData.map(podcast => 
-							`Title: ${podcast.title}\n` +
-							`Channel: ${podcast.channel}\n` +
-							`Link: ${podcast.link}\n` +
-							`Summary: ${podcast.summary}\n` +
-							`Keywords: ${podcast.keywords}\n` +
-							`Keyword Rollup: ${podcast.keywordRollup}\n` +
-							`Created: ${podcast.createdTime}\n` +
-							`---`
-						).join('\n');
+					// Return the raw drops data for debugging first
+					const debugInfo = `Found ${drops.length} podcast summaries:\n\n` +
+						`Raw drops data:\n${JSON.stringify(drops, null, 2)}`;
 
 					return {
 						content: [
 							{
 								type: "text",
-								text: formattedText,
+								text: debugInfo,
 							},
 						],
 					};
