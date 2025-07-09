@@ -38,7 +38,12 @@ export async function listYouTubeDrops(
 		AIRTABLE_BASE_ID,
 	);
 
-	const raw = await base("Youtube Link Drop").select().all();
+	const raw = await base("Youtube Link Drop")
+		.select({
+			 maxRecords: 50,
+    		 view: "All Data"
+		})
+		.all();
 
 	console.log(
 		"Raw Airtable data structure (first record):",
@@ -54,38 +59,8 @@ export async function listYouTubeDrops(
 			}),
 	);
 
-	const successes = parsed
-		.filter((p: { success: any }) => p.success)
-		.map((p: any) => p.data);
-	const errors = parsed
-		.filter((p: { success: any }) => !p.success)
-		.map((p: any) => p.error);
 
-	if (errors.length) {
-		console.error("Validation errors:");
-		errors.forEach((error, index) => {
-			console.error(`Error ${index + 1}:`, JSON.stringify(error, null, 2));
-		});
-
-		// Also log the raw data for the first few failed records to see the structure
-		console.error("Sample raw data from failed records:");
-		raw.slice(0, 3).forEach((rec, index) => {
-			console.error(
-				`Raw record ${index + 1}:`,
-				JSON.stringify(
-					{
-						id: rec.id,
-						createdTime: rec._rawJson?.createdTime,
-						fields: rec.fields,
-					},
-					null,
-					2,
-				),
-			);
-		});
-	}
-
-	return successes;
+	return parsed;
 }
 
 export class MyMCP extends McpAgent {
