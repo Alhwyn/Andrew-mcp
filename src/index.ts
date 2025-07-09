@@ -139,7 +139,6 @@ export class MyMCP extends McpAgent {
 	server = new McpServer({
 		name: "Andrew MCP",
 		version: "1.0.0",
-		logo: "https://pbs.twimg.com/profile_images/1850577967904395264/CU6rpC8N_400x400.jpg"
 	});
 
 	async init() {
