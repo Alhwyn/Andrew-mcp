@@ -34,7 +34,7 @@ export const YouTubeDropSchema = z.object({
 		Thumbnail: z.array(ThumbnailSchema).optional(),
 		"Channel Name": z.string(),
 		"Video Title": z.string(),
-		//"Video Summary": VideoSummarySchema.optional(),
+		"Video Summary": VideoSummarySchema.optional(),
 		"Record ID": z.string(),
 		Keywords: z.array(z.string()).optional(),
 		"Keyword Rollup": z.array(z.string()).optional(),

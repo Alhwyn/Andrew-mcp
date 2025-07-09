@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { PostRecord, YoutubeLinkDropRecord } from "./schema.js";
 import { YouTubeDropSchema } from "./schema.js";
 import Airtable from "airtable";
-import { number } from "zod/v4";
+import { number, record } from "zod/v4";
 
 // Don't initialize Airtable here - do it in the functions that need it
 
@@ -50,8 +50,7 @@ export async function listYouTubeDrops(
 				"Channel Name",
 				"Video Title",
 				"Video Summary",
-				"Record ID",
-				"Keywords",
+				"Record ID",   
 				"Keyword Rollup"
 			]
 		})
@@ -105,6 +104,51 @@ export async function listYouTubeDrops(
 	return successes;
 }
 
+export async function getTranscribedPodcast(
+	recordId: string,
+	env: any,
+): Promise<YoutubeLinkDropRecord> {
+	const AIRTABLE_API_TOKEN = env.AIRTABLE_API_TOKEN;
+	const AIRTABLE_BASE_ID = env.AIRTABLE_BASE_ID;
+
+	if (!AIRTABLE_API_TOKEN || !AIRTABLE_BASE_ID) {
+		throw new Error("Airtable credentials not found in environment");
+	}
+
+	const base = new Airtable({ apiKey: AIRTABLE_API_TOKEN }).base(
+		AIRTABLE_BASE_ID,
+	);
+
+	try {
+		const record = await base('Youtube Link Drop').find(recordId);
+
+
+		// Parse record fields to ensure it has the required properties
+		const result = YouTubeDropSchema.safeParse({
+			id: record.id,
+			createdTime: record._rawJson.createdTime,
+			fields: record.fields
+		});
+
+		if (!result.success) {
+			console.error('Validation error:', result.error);
+			throw new Error('Record fields validation failed');
+		}
+
+		const raw: YoutubeLinkDropRecord = result.data;
+
+		console.log(
+			"Raw Airtable data structure (record):",
+			JSON.stringify(raw, null, 2),
+		);
+
+		return raw;
+	} catch (err) {
+		console.error('Error retrieving record:', err);
+		throw err;
+	}
+}
+
 export class MyMCP extends McpAgent {
 	server = new McpServer({
 		name: "Andrew MCP",
@@ -152,6 +196,42 @@ export class MyMCP extends McpAgent {
 				}
 			},
 		);
+
+		this.server.tool(
+			"get_youtube_transcript",
+			{
+				recordId: z.string().describe("The record ID of the YouTube drop to retrieve"),
+			},
+			async ({recordId}) => {
+				try {
+						const getTranscript = await getTranscribedPodcast(recordId, this.env);
+						console.log(`${getTranscript} valid records:\n`);
+
+						const debugInfo = `Raw drops data:\n${JSON.stringify(getTranscript, null, 2)}`;
+
+						return {
+							content: [
+								{
+									type: "text",
+									text: debugInfo,
+								},
+							],
+						};
+
+				} catch (error) {
+					console.error("Error in list_podcast_summaries:", error);
+					return {
+						content: [
+							{
+								type: "text",
+								text: "An error occurred while retrieving podcast summaries.",
+							},
+						],
+						isError: true,
+					};
+				}
+			}
+		)
 
 		this.server.tool(
 			"search_tweet_date_range",
