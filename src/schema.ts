@@ -19,7 +19,7 @@ const ThumbnailSchema = z.object({
 	url: z.string().url(),
 	filename: z.string(),
 });
-
+// bog
 const VideoSummarySchema = z.object({
 	state: z.string(),
 	value: z.string(),
