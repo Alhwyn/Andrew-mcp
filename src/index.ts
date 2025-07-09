@@ -43,7 +43,17 @@ export async function listYouTubeDrops(
 	const raw = await base("Youtube Link Drop")
 		.select({
 			maxRecords: limit,
-			view: "All Data"
+			view: "All Data",
+			fields: [
+				"Youtube Link",
+				"Thumbnail", 
+				"Channel Name",
+				"Video Title",
+				"Video Summary",
+				"Record ID",
+				"Keywords",
+				"Keyword Rollup"
+			]
 		})
 		.all();
 
@@ -113,42 +123,8 @@ export class MyMCP extends McpAgent {
 					const drops = await listYouTubeDrops(limit, this.env);
 					console.log(`Found ${drops.length} valid records:\n`);
 
-					for (const d of drops) {
-						console.log(
-							`→ [${d.id}] ${d.fields["Video Title"]} (${d.fields["Channel Name"]})`,
-						);
-						console.log(`   Link: ${d.fields["Youtube Link"]}`);
 
-						// Handle Video Summary which can be either string or object
-						const summary = d.fields["Video Summary"];
-						if (summary) {
-							const summaryText =
-								typeof summary === "string" ? summary : summary.value;
-							console.log(`   Summary: ${summaryText}`);
-						}
-
-						console.log(`   Keywords: ${d.fields["Keywords"]?.join(", ")}`);
-						console.log("---");
-					}
-
-					// Format the podcast data for return
-					const podcastData = drops.map(d => {
-						const summary = d.fields["Video Summary"];
-						const summaryText = summary 
-							? (typeof summary === "string" ? summary : summary.value)
-							: "No summary available";
-						
-						return {
-							id: d.id,
-							title: d.fields["Video Title"],
-							channel: d.fields["Channel Name"],
-							link: d.fields["Youtube Link"],
-							summary: summaryText,
-							keywords: d.fields["Keywords"]?.join(", ") || "No keywords",
-							keywordRollup: d.fields["Keyword Rollup"] || "No keyword rollup",
-							createdTime: d.createdTime
-						};
-					});
+					
 
 					// Return the raw drops data for debugging first
 					const debugInfo = `Found ${drops.length} podcast summaries:\n\n` +
