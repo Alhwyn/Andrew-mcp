@@ -1,10 +1,9 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { PostRecord, YoutubeLinkDropRecord } from "./schema.js";
-import { YouTubeDropSchema } from "./schema.js";
+import  { PostRecord, YoutubeLinkDropRecord } from "./schema.js";
+import { Transcription, YouTubeDropSchema } from "./schema.js";
 import Airtable from "airtable";
-import { number, record } from "zod/v4";
 
 // Don't initialize Airtable here - do it in the functions that need it
 
@@ -107,7 +106,7 @@ export async function listYouTubeDrops(
 export async function getTranscribedPodcast(
 	recordId: string,
 	env: any,
-): Promise<YoutubeLinkDropRecord> {
+): Promise<String> {
 	const AIRTABLE_API_TOKEN = env.AIRTABLE_API_TOKEN;
 	const AIRTABLE_BASE_ID = env.AIRTABLE_BASE_ID;
 
@@ -124,25 +123,14 @@ export async function getTranscribedPodcast(
 
 
 		// Parse record fields to ensure it has the required properties
-		const result = YouTubeDropSchema.safeParse({
+		const result: Transcription = {
 			id: record.id,
 			createdTime: record._rawJson.createdTime,
-			fields: record.fields
-		});
+			fields: { Transcription: String(record.fields.Transcription || "") }
+		};
 
-		if (!result.success) {
-			console.error('Validation error:', result.error);
-			throw new Error('Record fields validation failed');
-		}
-
-		const raw: YoutubeLinkDropRecord = result.data;
-
-		console.log(
-			"Raw Airtable data structure (record):",
-			JSON.stringify(raw, null, 2),
-		);
-
-		return raw;
+	
+		return result.fields.Transcription;
 	} catch (err) {
 		console.error('Error retrieving record:', err);
 		throw err;
@@ -157,7 +145,7 @@ export class MyMCP extends McpAgent {
 
 	async init() {
 		this.server.tool(
-			"list_podcast_summaries",
+			"list_podcast",
 			"Lists all podcast summary records from Airtable",
 			{
 				limit: z.number().min(1).max(500).optional().default(50).describe("Maximum number of records to return. Default: 50, Range: 1-500"),
@@ -199,8 +187,9 @@ export class MyMCP extends McpAgent {
 
 		this.server.tool(
 			"get_youtube_transcript",
+			"Retrieves detailed transcript and information for a specific YouTube podcast. You must first call list_podcast to get the record IDs for available podcasts.",
 			{
-				recordId: z.string().describe("The record ID of the YouTube drop to retrieve"),
+				recordId: z.string().describe("The record ID of the YouTube drop to retrieve (get this from list_podcast results)"),
 			},
 			async ({recordId}) => {
 				try {
@@ -234,7 +223,7 @@ export class MyMCP extends McpAgent {
 		)
 
 		this.server.tool(
-			"search_tweet_date_range",
+			"search_tweets",
 			{
 				startDate: z
 					.string()

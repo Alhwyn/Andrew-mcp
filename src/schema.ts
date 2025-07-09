@@ -41,8 +41,21 @@ export const YouTubeDropSchema = z.object({
 	}),
 });
 
+export const Transcript = z.object({
+	id: z.string(),
+	createdTime: z.string(),
+	fields: z.object({
+		"Transcription": z.string(),
+	}),
+});
+
+
+
+
 export const allPosts = z.array(postRecord);
 
 export type PostRecord = z.infer<typeof postRecord>;
 export type YoutubeLinkDropRecord = z.infer<typeof YouTubeDropSchema>;
 export type Thumbnail = z.infer<typeof ThumbnailSchema>;
+export type Transcription = z.infer<typeof Transcript>;
+
